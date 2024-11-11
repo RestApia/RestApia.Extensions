@@ -1,0 +1,50 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "manifests/**" # Trigger only if changes are made in the 'manifests' folder
+      - "references-whitelist.txt" # Trigger only if changes are made to the 'references-whitelist.txt' file
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Prepare Validation
+        uses: actions/checkout@v4
+        with:
+          path: ./
+          repository: RestApia/RestApia.Extensions.Private
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+        with:
+          path: .local/pr
+
+      - name: Run Validation
+        run: |
+          chmod +x ./build.sh
+          ./build.sh Git_PR_Handle --PrNumber ${{ github.event.number }}
+        env:
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package-${{ github.event.number }}  # Unique name per PR
+          path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Post Validation Success
+        if: success()
+        run: echo "Validation passed successfully."
+
+      - name: Post Validation Failure
+        if: failure()
+        run: echo "Validation failed."

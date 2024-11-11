@@ -1,0 +1,43 @@
+name: Publish to GitHub Packages (Manual Trigger)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+        contents: read
+        packages: write # Grants write access to GitHub Packages
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Get Last Merged PR Number on Main
+        id: get_pr
+        run: |
+          PR_NUMBER=$(gh pr list --state merged --base main --sort merged --limit 1 --json number --jq '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No recently merged PR found. Exiting."
+            exit 1
+          fi
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download PR Validation Artifact
+        if: env.PR_NUMBER
+        uses: actions/download-artifact@v3
+        with:
+          name: extension-package-${{ env.PR_NUMBER }}
+          path: ./downloaded_nuget
+
+      - name: Publish to GitHub Packages
+        if: env.PR_NUMBER
+        run: dotnet nuget push "downloaded_nuget/*.nupkg" \
+          -s "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+          -k ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
