@@ -1,0 +1,23 @@
+# Allowed references, one for each line
+
+AutoMapper
+Azure.Core
+Azure.Identity
+Azure.Security.KeyVault.Secrets
+Microsoft.Bcl.AsyncInterfaces
+Microsoft.Extensions.DependencyInjection.Abstractions
+Microsoft.Identity.Client
+Microsoft.Identity.Client.Extensions.Msal
+Microsoft.IdentityModel.Abstractions
+RestApia.Shared
+StyleCop.Analyzers
+System.ClientModel
+System.Diagnostics.DiagnosticSource
+System.Memory
+System.Memory.Data
+System.Numerics.Vectors
+System.Runtime.CompilerServices.Unsafe
+System.Security.Cryptography.ProtectedData
+System.Text.Encodings.Web
+System.Text.Json
+System.Threading.Tasks.Extensions
