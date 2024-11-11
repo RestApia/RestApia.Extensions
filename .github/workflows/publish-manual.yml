@@ -18,7 +18,7 @@ jobs:
       - name: Get Last Merged PR Number on Main
         id: get_pr
         run: |
-          PR_NUMBER=$(gh pr list --state merged --base main --sort merged --limit 1 --json number --jq '.[0].number')
+          PR_NUMBER=$(gh pr list --state merged --base main --json number,mergedAt --jq 'sort_by(.mergedAt) | last(.[]).number')
           if [ -z "$PR_NUMBER" ]; then
             echo "No recently merged PR found. Exiting."
             exit 1
