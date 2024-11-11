@@ -1,6 +1,5 @@
 {
-    "id": "RestApia.Extensions.ValuesProvider.AzureKeyVault",
     "urlRepo": "https://github.com/RestApia/RestApia.Shared.git",
-    "version": "1.1.5-preview",
+    "version": "1.1.6-preview",
     "projectFile": "src/Extensions/RestApia.Extensions.ValuesProvider.AzureKeyVault/RestApia.Extensions.ValuesProvider.AzureKeyVault.csproj"
   }
