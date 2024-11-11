@@ -13,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Prepare Publish
+        uses: actions/checkout@v4
+        with:
+          path: ./
+          repository: RestApia/RestApia.Extensions.Private
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
       - name: Publish package
         run: |
           chmod +x ./build.sh
