@@ -4,41 +4,27 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "manifests/**" # Trigger only if changes are made in the 'manifests' folder
 
 jobs:
   publish:
-    if: false # Disable this job for now
+    if: true
     runs-on: ubuntu-latest
 
-    permissions:
-        contents: read
-        packages: write # Grants write access to GitHub Packages
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Get PR Number from Commit Message
-        id: get_pr
+      - name: Publish package
         run: |
-          PR_NUMBER=$(echo "${{ github.event.head_commit.message }}" | grep -oP "(?<=Merge pull request #)[0-9]+")
-          if [ -z "$PR_NUMBER" ]; then
-            echo "No PR number found in commit message. Exiting."
-            exit 1
-          fi
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-
-      - name: Download PR Validation Artifact
-        if: env.PR_NUMBER
-        uses: actions/download-artifact@v3
-        with:
-          name: extension-package-${{ env.PR_NUMBER }}
-          path: ./downloaded_nuget
-
-      - name: Publish to GitHub Packages
-        if: env.PR_NUMBER
-        run: dotnet nuget push "downloaded_nuget/*.nupkg" \
-          -s "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-          -k ${{ secrets.GITHUB_TOKEN }}
+          chmod +x ./build.sh
+          ./build.sh Publish_HandlePush --PublishHeadCommit ${{ github.event.head_commit.message }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          PUBLISH_REPO_TOKEN: ${{ secrets.PUBLISH_REPO_TOKEN }}
+
+      - name: Post Validation Success
+        if: success()
+        run: echo "Validation passed successfully."
+
+      - name: Post Validation Failure
+        if: failure()
+        run: echo "Validation failed."
