@@ -23,7 +23,7 @@ jobs:
       - name: Publish package
         run: |
           chmod +x ./build.sh
-          ./build.sh Publish_HandlePush --PublishHeadCommit ${{ github.event.head_commit.message }}
+          ./build.sh Publish_HandlePush --PublishHeadCommit "${{ github.event.head_commit.message }}"
         env:
           PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
           PUBLISH_REPO_TOKEN: ${{ secrets.PUBLISH_REPO_TOKEN }}
