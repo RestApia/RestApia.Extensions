@@ -56,10 +56,11 @@ jobs:
               }
             }
             core.setOutput("prs_to_validate", JSON.stringify(prNumbers));
+            console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
 
   trigger_validation:
     needs: check_prs
-    if: ${{ needs.check_prs.outputs.prs_to_validate != '[]' }}
+    if: ${{ needs.check_prs.outputs.prs_to_validate && needs.check_prs.outputs.prs_to_validate != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
