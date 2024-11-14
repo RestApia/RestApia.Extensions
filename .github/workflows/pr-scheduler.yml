@@ -11,19 +11,74 @@ permissions:
   statuses: write
 
 jobs:
-  job1:
+  check_prs:
     runs-on: ubuntu-latest
     outputs:
-      output1: ${{ steps.step1.outputs.result }}
+      prs: ${{ steps.set_output_prs.outputs.prs }}
     steps:
-      - id: step1
-        run: |
-          echo "result=hello" >> $GITHUB_OUTPUT
+      - name: List Open PRs
+        id: list_prs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            core.exportVariable('PRS', JSON.stringify(pullRequests));
 
+      - name: Filter PRs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prsRaw = process.env.PRS;
+
+            if (!prsRaw || prsRaw === '[]') {
+              console.log("No PRs to validate.");
+              core.setOutput("prs_to_validate", JSON.stringify([]));
+              return;
+            }
+            
+            const prs = JSON.parse(prsRaw);
+            const prNumbers = [];
+            for (const pr of prs) {
+              const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha
+              });
+              const hasValidatedStatus = statuses.some(status => status.context === 'Validated');
+              const hasInProgressStatus = statuses.some(status => status.context === 'InProgress');
+              if (!hasValidatedStatus && !hasInProgressStatus) {
+                prNumbers.push(pr.number);
+              }
+            }
+            console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
+            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
+
+      - name: Set Output PRs
+        id: set_output_prs
+        run: echo "prs=${VALID_PR_NUMBERS} >> $GITHUB_OUTPUT"
+            
   job2:
+    needs: check_prs
     runs-on: ubuntu-latest
-    needs: job1
     steps:
-      - run: |
-          echo "Job 1 output: ${{ needs.job1.outputs.output1 }}"
+      - name: Use Variable
+        run: echo "${{ needs.check_prs.outputs.prs }}"
 
+  # trigger_validation:
+  #   needs: check_prs
+  #   if: ${{ needs.check_prs.outputs.prs_to_validate && fromJSON(needs.check_prs.outputs.prs_to_validate).length > 0 }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       pr_number: ${{ fromJSON(needs.check_prs.outputs.set_output_prs.prs_to_validate) }}
+
+  #   steps:
+  #     - name: Debug
+  #       run: |
+  #         echo "PR Number: ${{ matrix.pr_number }}"
