@@ -31,7 +31,14 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const prs = JSON.parse(core.getInput("prs"));
+            const prsRaw = core.getInput("prs");
+            if (!prsRaw || prsRaw === '[]') {
+              console.log("No PRs to validate.");
+              core.setOutput("prs_to_validate", JSON.stringify([]));
+              return;
+            }
+            
+            const prs = JSON.parse(prsRaw);
             const prNumbers = [];
             for (const pr of prs) {
               const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
@@ -46,6 +53,7 @@ jobs:
               }
             }
             core.setOutput("prs_to_validate", JSON.stringify(prNumbers));
+    
 
   trigger_validation:
     needs: check_prs
