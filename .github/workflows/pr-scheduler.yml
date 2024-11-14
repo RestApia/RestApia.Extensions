@@ -68,6 +68,7 @@ jobs:
             core.setOutput("prs", validate);
 
   trigger_validation:
+    name: PR-${{ matrix.pr.number }}
     needs: check_prs
     if: ${{ fromJSON(needs.check_prs.outputs.prs)[0] }}
     runs-on: ubuntu-latest
@@ -94,7 +95,7 @@ jobs:
               state: 'pending',
               context: 'PR Validation / Auto',
               description: 'Validation is in progress...',
-              target_url: context.payload.repository.html_url + '/actions/runs/' + context.runId + '/job/' + context.job,
+              target_url: context.payload.repository.html_url + '/actions/runs/' + context.runId + '#job-name-PR-${{ matrix.pr.number }}',
             });
 
       - name: Prepare Validation
