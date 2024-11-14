@@ -82,6 +82,8 @@ jobs:
       
       - name: Set pending Status
         uses: actions/github-script@v6
+        env:
+          prSha: ${{ matrix.pr.head.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -93,8 +95,6 @@ jobs:
               context: 'PR Validation / Auto',
               description: 'Validation is in progress...',
             });
-        env:
-          prSha: ${{ matrix.pr.head.sha }}
 
       - name: Prepare Validation
         uses: actions/checkout@v4
@@ -126,14 +126,14 @@ jobs:
         if: success()
         uses: actions/github-script@v6
         env:
-          pr: ${{ matrix.pr }}
+          prSha: ${{ matrix.pr.head.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: process.env.pr.head.sha,
+              sha: process.env.prSha,
               state: 'success',
               context: 'PR Validation / Auto',
               description: 'Validation passed successfully.',
@@ -143,14 +143,14 @@ jobs:
         if: failure()
         uses: actions/github-script@v6
         env:
-          pr: ${{ matrix.pr }}
+          prSha: ${{ matrix.pr.head.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: process.env.pr.head.sha,
+              sha: process.env.prSha,
               state: 'failure',
               context: 'PR Validation / Auto',
               description: 'Validation failed.',
