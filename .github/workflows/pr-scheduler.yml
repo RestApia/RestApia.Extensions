@@ -61,7 +61,7 @@ jobs:
 
       - name: Set Output PRs
         id: set_output_prs
-        run: echo "prs=${VALID_PR_NUMBERS} >> $GITHUB_OUTPUT"
+        run: echo "prs=${VALID_PR_NUMBERS}" >> $GITHUB_OUTPUT
             
   job2:
     needs: check_prs
