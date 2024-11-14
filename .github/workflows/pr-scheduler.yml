@@ -34,8 +34,9 @@ jobs:
         id: filter_prs
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prsRaw = core.getInput("prs", { required: true });
+            const prsRaw = core.getInput("prs") || steps.list_prs.outputs.prs;
             console.log("PRs raw: ", prsRaw);
 
             if (!prsRaw || prsRaw === '[]') {
