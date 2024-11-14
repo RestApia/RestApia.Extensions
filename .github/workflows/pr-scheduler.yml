@@ -61,7 +61,7 @@ jobs:
               // }
 
               const hasStatus = statuses.some(status => status.context === 'PR Validation / Auto');
-              if (!hasStatus) {
+              if (!hasStatus || true) {
                 validate.push(pr);
               }
             }
@@ -94,6 +94,7 @@ jobs:
               state: 'pending',
               context: 'PR Validation / Auto',
               description: 'Validation is in progress...',
+              target_url: context.payload.repository.html_url + '/actions/runs/' + context.runId + '/job/' + context.job,
             });
 
       - name: Prepare Validation
@@ -137,6 +138,7 @@ jobs:
               state: 'success',
               context: 'PR Validation / Auto',
               description: 'Validation passed successfully.',
+              target_url: context.payload.repository.html_url + '/actions/runs/' + context.runId + '/job/' + context.job,
             });
 
       - name: Post failure Failure
@@ -154,5 +156,6 @@ jobs:
               state: 'failure',
               context: 'PR Validation / Auto',
               description: 'Validation failed.',
+              target_url: context.payload.repository.html_url + '/actions/runs/' + context.runId + '/job/' + context.job,
             });
   
