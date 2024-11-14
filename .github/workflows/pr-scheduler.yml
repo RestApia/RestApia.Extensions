@@ -28,7 +28,6 @@ jobs:
             core.exportVariable('PRS', JSON.stringify(pullRequests));
 
       - name: Filter PRs
-        id: filter_prs
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -58,6 +57,8 @@ jobs:
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
             core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
 
+      - name: Set Output PRs
+        run: echo "MY_VARIABLE=${VALID_PR_NUMBERS}" >> $GITHUB_ENV"
             
   job2:
     needs: check_prs
