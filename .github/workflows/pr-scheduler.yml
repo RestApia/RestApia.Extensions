@@ -71,11 +71,11 @@ jobs:
           # echo "3: ${{ needs.check_prs.outputs.prs.length }}"
           echo "4: ${{ fromJSON(needs.check_prs.outputs.prs) }}"
           echo "5: ${{ fromJSON(needs.check_prs.outputs.prs)[0] }}"
+          echo "6: ${{ fromJSON(needs.check_prs.outputs.prs).length }}"
           echo "6: ${{ fromJSON(needs.check_prs.outputs.prs).length > 0 }}"
 
   trigger_validation:
     needs: check_prs
-    if: ${{ fromJSON(needs.check_prs.outputs.prs).length > 0 }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
