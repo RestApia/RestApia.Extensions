@@ -22,7 +22,6 @@ jobs:
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'open'
             });
             core.setOutput("prs", JSON.stringify(pullRequests.map(pr => pr.number)));
 
