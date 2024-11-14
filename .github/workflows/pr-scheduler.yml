@@ -28,16 +28,16 @@ jobs:
             
             console.log("owner: ", context.repo.owner);
             console.log("repo: ", context.repo.repo);
-            console.log("PRs: ", pullRequests.map(pr => pr.number));
+            console.log("PRs: ", JSON.stringify(pullRequests.map(pr => pr.number)));
 
       - name: Filter PRs without Validated or InProgress Status
         id: filter_prs
         uses: actions/github-script@v6
         with:
           script: |
-            const prsRaw = core.getInput("prs");
+            const prsRaw = core.getInput("prs", { required: true });
             console.log("PRs raw: ", prsRaw);
-            
+
             if (!prsRaw || prsRaw === '[]') {
               console.log("No PRs to validate.");
               core.setOutput("prs_to_validate", JSON.stringify([]));
