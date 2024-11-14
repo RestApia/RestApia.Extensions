@@ -58,7 +58,7 @@ jobs:
             core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
 
       - name: Set Output PRs
-        run: echo "MY_VARIABLE=${VALID_PR_NUMBERS} >> $GITHUB_ENV"
+        run: echo "VALID_PR_NUMBERS=${VALID_PR_NUMBERS} >> $GITHUB_ENV"
             
   job2:
     needs: check_prs
