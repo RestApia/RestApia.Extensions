@@ -18,7 +18,7 @@ jobs:
         id: list_prs
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}  # Explicitly set the GitHub token
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
@@ -56,11 +56,10 @@ jobs:
               }
             }
             core.setOutput("prs_to_validate", JSON.stringify(prNumbers));
-    
 
   trigger_validation:
     needs: check_prs
-    if: needs.check_prs.outputs.prs_to_validate != '[]'
+    if: ${{ needs.check_prs.outputs.prs_to_validate != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
