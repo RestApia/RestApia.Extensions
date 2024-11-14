@@ -24,7 +24,7 @@ jobs:
               repo: context.repo.repo,
               state: 'open'
             });
-            core.setOutput("prs", JSON.stringify(pullRequests.map(pr => pr.number)));
+            core.exportVariable('PRS', JSON.stringify(pullRequests.map(pr => pr.number)));
             
             console.log("owner: ", context.repo.owner);
             console.log("repo: ", context.repo.repo);
@@ -36,7 +36,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prsRaw = core.getInput("prs") || steps.list_prs.outputs.prs;
+            const prsRaw = process.env.PRS;
             console.log("PRs raw: ", prsRaw);
 
             if (!prsRaw || prsRaw === '[]') {
