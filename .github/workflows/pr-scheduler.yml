@@ -65,18 +65,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate PRs
-        run: echo "${{ needs.check_prs.outputs.prs }}"
-
-      - name: Validate PRs 2- length
-        run: echo "${{ needs.check_prs.outputs.prs.length }}"
+        run: |
+          echo "${{ needs.check_prs.outputs.prs }}"
+          echo "Type of prs: $(echo ${{ needs.check_prs.outputs.prs }})"
+        
+      - name: Validate PRs 2 - length
+        run: |
+          echo "${{ needs.check_prs.outputs.prs.length }}"
+          echo "${{ fromJSON(needs.check_prs.outputs.prs).length }}"
+          PRS="${{ needs.check_prs.outputs.prs.length }}"
+          echo "Number of PRs: $(echo "$PRS" | jq length)"
 
   trigger_validation:
     needs: check_prs
-    if: ${{ needs.check_prs.outputs.prs && needs.check_prs.outputs.prs.length > 0 }}
+    if: ${{ needs.check_prs.outputs.prs && fromJSON(needs.check_prs.outputs.prs).length > 0 }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pr_number: ${{ needs.check_prs.outputs.prs }}
+        pr_number: ${{ fromJSON(needs.check_prs.outputs.prs) }}
 
     steps:
       - name: Debug
