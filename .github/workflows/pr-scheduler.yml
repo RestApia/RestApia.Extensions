@@ -14,7 +14,7 @@ jobs:
   check_prs:
     runs-on: ubuntu-latest
     outputs:
-      prs: ${{ steps.set_output_prs.outputs.prs }}
+      prs: ${{ steps.filter_prs.outputs.prs }}
     steps:
       - name: List Open PRs
         id: list_prs
@@ -30,6 +30,7 @@ jobs:
             core.exportVariable('PRS', JSON.stringify(pullRequests));
 
       - name: Filter PRs
+        id: filter_prs
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -58,27 +59,24 @@ jobs:
             }
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
             core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
-
-      - name: Set Output PRs
-        id: set_output_prs
-        run: echo "prs=${VALID_PR_NUMBERS}" >> $GITHUB_OUTPUT
+            core.setOutput("prs", JSON.stringify(prNumbers));
             
-  job2:
-    needs: check_prs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Use Variable
-        run: echo "${{ needs.check_prs.outputs.prs }}"
-
-  # trigger_validation:
+  # job2:
   #   needs: check_prs
-  #   if: ${{ needs.check_prs.outputs.prs_to_validate && fromJSON(needs.check_prs.outputs.prs_to_validate).length > 0 }}
   #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       pr_number: ${{ fromJSON(needs.check_prs.outputs.set_output_prs.prs_to_validate) }}
-
   #   steps:
-  #     - name: Debug
-  #       run: |
-  #         echo "PR Number: ${{ matrix.pr_number }}"
+  #     - name: Use Variable
+  #       run: echo "${{ needs.check_prs.outputs.prs }}"
+
+  trigger_validation:
+    needs: check_prs
+    if: ${{ needs.check_prs.outputs.prs && fromJSON(needs.check_prs.outputs.prs).length > 0 }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pr_number: ${{ fromJSON(needs.check_prs.outputs.prs) }}
+
+    steps:
+      - name: Debug
+        run: |
+          echo "PR Number: ${{ matrix.pr_number }}"
