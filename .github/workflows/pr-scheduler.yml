@@ -24,6 +24,10 @@ jobs:
               repo: context.repo.repo,
             });
             core.setOutput("prs", JSON.stringify(pullRequests.map(pr => pr.number)));
+            
+            console.log("owner: ", context.repo.owner);
+            console.log("repo: ", context.repo.repo);
+            console.log("PRs: ", pullRequests.map(pr => pr.number));
 
       - name: Filter PRs without Validated or InProgress Status
         id: filter_prs
