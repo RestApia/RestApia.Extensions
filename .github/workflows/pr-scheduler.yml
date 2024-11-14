@@ -13,13 +13,17 @@ permissions:
 jobs:
   job1:
     runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.step1.outputs.result }}
     steps:
-      - name: Set Variable
-        run: echo "MY_VARIABLE=my_value" >> $GITHUB_ENV #this is workflow scoped
+      - id: step1
+        run: |
+          echo "result=hello" >> $GITHUB_OUTPUT
 
   job2:
-    needs: job1
     runs-on: ubuntu-latest
+    needs: job1
     steps:
-      - name: Use Variable
-        run: echo "${{ env.MY_VARIABLE }}"
+      - run: |
+          echo "Job 1 output: ${{ needs.job1.outputs.output1 }}"
+
