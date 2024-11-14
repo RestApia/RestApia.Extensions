@@ -77,7 +77,7 @@ jobs:
 
   trigger_validation:
     needs: check_prs
-    if: ${{ needs.check_prs.outputs.prs && fromJSON(needs.check_prs.outputs.prs).length > 0 }}
+    if: ${{ fromJSON(needs.check_prs.outputs.prs).length > 0 }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
