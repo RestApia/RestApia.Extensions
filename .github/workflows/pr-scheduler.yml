@@ -1,0 +1,52 @@
+name: Check Pull Requests
+
+on:
+  schedule:
+    - cron: "* */1 * * *"   # Run every 1 hour
+  workflow_dispatch:        # Allow manual triggering
+
+jobs:
+  check_prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List Open Pull Requests
+        id: list_prs
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: pullRequests } = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            return pullRequests.map(pr => ({ number: pr.number }));
+
+      - name: Filter PRs without Validated or InProgress Status
+        id: filter_prs
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumbers = [];
+            for (const pr of ${JSON.stringify(pullRequests)}) {
+              const { data: statuses } = await github.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha
+              });
+              const hasValidatedStatus = statuses.some(status => status.context === 'Validated');
+              const hasInProgressStatus = statuses.some(status => status.context === 'InProgress');
+              if (!hasValidatedStatus && !hasInProgressStatus) {
+                prNumbers.push(pr.number);
+              }
+            }
+            core.setOutput("prs_to_validate", prNumbers.join(','));
+
+      - name: Trigger Validation Workflow
+        if: steps.filter_prs.outputs.prs_to_validate != ''
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: "pr-validation.yml"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+          inputs:
+            pr_number: ${{ each(steps.filter_prs.outputs.prs_to_validate.split(',')) }}
