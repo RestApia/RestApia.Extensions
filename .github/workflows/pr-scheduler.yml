@@ -82,13 +82,15 @@ jobs:
       
       - name: Set pending Status
         uses: actions/github-script@v6
+        env:
+          pr: ${{ matrix.pr }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: pr.head.sha,
+              sha: process.env.pr.head.sha,
               state: 'pending',
               context: 'PR Validation / Auto',
               description: 'Validation is in progress...',
@@ -123,13 +125,15 @@ jobs:
       - name: Set success Status
         if: success()
         uses: actions/github-script@v6
+        env:
+          pr: ${{ matrix.pr }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: pr.head.sha,
+              sha: process.env.pr.head.sha,
               state: 'success',
               context: 'PR Validation / Auto',
               description: 'Validation passed successfully.',
@@ -138,13 +142,15 @@ jobs:
       - name: Post failure Failure
         if: failure()
         uses: actions/github-script@v6
+        env:
+          pr: ${{ matrix.pr }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: pr.head.sha,
+              sha: process.env.pr.head.sha,
               state: 'failure',
               context: 'PR Validation / Auto',
               description: 'Validation failed.',
