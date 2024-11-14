@@ -2,7 +2,7 @@ name: Check Pull Requests
 
 on:
   schedule:
-    - cron: "* */1 * * *"  # Run every 15 minutes
+    - cron: "* */1 * * *"  # Run every hour
   workflow_dispatch:        # Allow manual triggering
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { data: pullRequests } = await github.pulls.list({
+            const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
@@ -29,7 +29,7 @@ jobs:
             const prs = JSON.parse(core.getInput("prs"));
             const prNumbers = [];
             for (const pr of prs) {
-              const { data: statuses } = await github.repos.listCommitStatusesForRef({
+              const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: pr.head.sha
