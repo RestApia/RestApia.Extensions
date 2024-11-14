@@ -13,6 +13,8 @@ permissions:
 jobs:
   check_prs:
     runs-on: ubuntu-latest
+    outputs:
+      prs_to_validate: ${{ steps.set_output_prs.outputs.prs_to_validate }}  # Set job-level output from final step
     steps:
       - name: List Open Pull Requests
         id: list_prs
@@ -37,7 +39,7 @@ jobs:
 
             if (!prsRaw || prsRaw === '[]') {
               console.log("No PRs to validate.");
-              core.setOutput("prs_to_validate", JSON.stringify([]));
+              core.exportVariable('VALID_PR_NUMBERS', JSON.stringify([]));
               return;
             }
             
@@ -56,21 +58,21 @@ jobs:
               }
             }
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
-            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
+            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));  # Store in environment variable
 
-      - name: Set Output for PRs to Validate
+      - name: Set Job Output for PRs to Validate
         id: set_output_prs
         run: |
           echo "Setting prs_to_validate output"
-          echo "::set-output name=prs_to_validate::${VALID_PR_NUMBERS}"
-      
-      - name: Log Output for prs_to_validate
+          echo "::set-output name=prs_to_validate::${VALID_PR_NUMBERS}"  # Set job output directly
+
+      - name: Log Job Output for prs_to_validate
         run: |
-          echo "prs_to_validate: ${{ steps.set_output_prs.outputs.prs_to_validate }}"  # Log output to confirm value
+          echo "prs_to_validate: ${{ steps.set_output_prs.outputs.prs_to_validate }}"  # Log job-level output
 
   trigger_validation:
     needs: check_prs
-    if: ${{ needs.check_prs.outputs.prs_to_validate && fromJSON(needs.check_prs.outputs.prs_to_validate).length > 0 }}
+    if: ${{ needs.check_prs.outputs.prs_to_validate != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
