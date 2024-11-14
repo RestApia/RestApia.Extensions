@@ -44,21 +44,28 @@ jobs:
             }
             
             const prs = JSON.parse(prsRaw);
-            const prNumbers = [];
+            const validate = [];
             for (const pr of prs) {
               const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: pr.head.sha
               });
-              const hasValidatedStatus = statuses.some(status => status.context === 'Validated');
-              const hasInProgressStatus = statuses.some(status => status.context === 'InProgress');
-              if (!hasValidatedStatus && !hasInProgressStatus) {
-                prNumbers.push(pr.number);
+              
+              // const hasValidatedStatus = statuses.some(status => status.context === 'PR Validation / Valid');
+              // const hasInProgressStatus = statuses.some(status => status.context === 'PR Validation / In Progress');
+              // const hasFailed = statuses.some(status => status.context === 'PR Validation / Failed');
+              
+              // if (!hasValidatedStatus && !hasInProgressStatus && !hasFailed) {
+              //   validate.push(pr);
+              // }
+
+              const hasStatus = statuses.some(status => status.context === 'PR Validation / Auto');
+              if (!hasStatus) {
+                validate.push(pr);
               }
             }
-            console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
-            core.setOutput("prs", prNumbers);
+            core.setOutput("prs", validate);
 
   trigger_validation:
     needs: check_prs
@@ -66,12 +73,26 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pr_number: ${{ fromJSON(needs.check_prs.outputs.prs) }}
+        pr: ${{ fromJSON(needs.check_prs.outputs.prs) }}
 
     steps:
       # - name: Debug
       #   run: |
-      #     echo "PR Number: ${{ matrix.pr_number }}"
+      #     echo "PR Number: ${{ matrix.pr.number }}"
+      
+      - name: Set pending Status
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: 'pending',
+              context: 'PR Validation / Auto',
+              description: 'Validation is in progress...',
+            });
 
       - name: Prepare Validation
         uses: actions/checkout@v4
@@ -83,27 +104,49 @@ jobs:
       - name: Checkout PR Code
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ matrix.pr_number }}/merge
+          ref: refs/pull/${{ matrix.pr.number }}/merge
           path: .local/pr
 
       - name: Run Validation
         run: |
           chmod +x ./build.sh
-          ./build.sh Git_PR_Handle --PrNumber ${{ matrix.pr_number }}
+          ./build.sh Git_PR_Handle --PrNumber ${{ matrix.pr.number }}
         env:
           PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: extension-package-${{ matrix.pr_number }}  # Unique name per PR
+          name: extension-package-${{ matrix.pr.number }}  # Unique name per PR
           path: ${{ env.ARTIFACT_PATH }}
 
-      - name: Post Validation Success
+      - name: Set success Status
         if: success()
-        run: echo "Validation passed successfully."
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: 'success',
+              context: 'PR Validation / Auto',
+              description: 'Validation passed successfully.',
+            });
 
-      - name: Post Validation Failure
+      - name: Post failure Failure
         if: failure()
-        run: echo "Validation failed."
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: 'failure',
+              context: 'PR Validation / Auto',
+              description: 'Validation failed.',
+            });
   
