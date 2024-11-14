@@ -70,11 +70,11 @@ jobs:
 
   trigger_validation:
     needs: check_prs
-    if: ${{ needs.check_prs.outputs.prs_to_validate && needs.check_prs.outputs.prs_to_validate != '[]' }}
+    if: ${{ needs.check_prs.set_output_prs.outputs.prs_to_validate && needs.check_prs.outputs.prs_to_validate != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pr_number: ${{ fromJSON(needs.check_prs.outputs.prs_to_validate) }}
+        pr_number: ${{ fromJSON(needs.check_prs.outputs.set_output_prs.prs_to_validate) }}
 
     steps:
       - name: Debug
