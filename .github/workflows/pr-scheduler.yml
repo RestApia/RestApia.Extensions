@@ -88,13 +88,13 @@ jobs:
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: process.env.prData.head.sha,
+              sha: process.env.prSha,
               state: 'pending',
               context: 'PR Validation / Auto',
               description: 'Validation is in progress...',
             });
         env:
-          prData: ${{ matrix.pr }}
+          prSha: ${{ matrix.pr.head.sha }}
 
       - name: Prepare Validation
         uses: actions/checkout@v4
