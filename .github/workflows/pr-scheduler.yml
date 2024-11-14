@@ -67,8 +67,9 @@ jobs:
       - name: Validate PRs
         run: |
           echo "${{ needs.check_prs.outputs.prs }}"
-          echo "Type of prs: $(echo ${{ needs.check_prs.outputs.prs }})"
+          echo "${{ needs.check_prs.outputs.prs[0] }}"
           echo "${{ needs.check_prs.outputs.prs.length }}"
+          echo "${{ fromJSON(needs.check_prs.outputs.prs) }}"
           echo "${{ fromJSON(needs.check_prs.outputs.prs).length }}"
           PRS="${{ needs.check_prs.outputs.prs.length }}"
           echo "Number of PRs: $(echo "$PRS" | jq length)"
