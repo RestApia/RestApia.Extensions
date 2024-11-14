@@ -2,8 +2,12 @@ name: Check Pull Requests
 
 on:
   schedule:
-    - cron: "* */1 * * *"  # Run every hour
+    - cron: "* */1 * * *"   # Run every hour
   workflow_dispatch:        # Allow manual triggering
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   check_prs:
@@ -13,6 +17,7 @@ jobs:
         id: list_prs
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # Explicitly set the GitHub token
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
