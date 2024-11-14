@@ -24,11 +24,7 @@ jobs:
               repo: context.repo.repo,
               state: 'open'
             });
-            core.exportVariable('PRS', JSON.stringify(pullRequests.map(pr => pr.number)));
-            
-            console.log("owner: ", context.repo.owner);
-            console.log("repo: ", context.repo.repo);
-            console.log("PRs: ", JSON.stringify(pullRequests.map(pr => pr.number)));
+            core.exportVariable('PRS', JSON.stringify(pullRequests));
 
       - name: Filter PRs without Validated or InProgress Status
         id: filter_prs
@@ -37,7 +33,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const prsRaw = process.env.PRS;
-            console.log("PRs raw: ", prsRaw);
 
             if (!prsRaw || prsRaw === '[]') {
               console.log("No PRs to validate.");
