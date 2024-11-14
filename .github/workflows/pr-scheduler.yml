@@ -55,8 +55,18 @@ jobs:
                 prNumbers.push(pr.number);
               }
             }
-            core.setOutput("prs_to_validate", JSON.stringify(prNumbers));
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
+            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
+
+      - name: Set Output for PRs to Validate
+        id: set_output_prs
+        run: |
+          echo "Setting prs_to_validate output"
+          echo "::set-output name=prs_to_validate::${VALID_PR_NUMBERS}"
+      
+      - name: Log Output for prs_to_validate
+        run: |
+          echo "prs_to_validate: ${{ steps.set_output_prs.outputs.prs_to_validate }}"  # Log output to confirm value
 
   trigger_validation:
     needs: check_prs
