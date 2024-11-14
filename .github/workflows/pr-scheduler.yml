@@ -82,19 +82,19 @@ jobs:
       
       - name: Set pending Status
         uses: actions/github-script@v6
-        env:
-          pr: ${{ matrix.pr }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: process.env.pr.head.sha,
+              sha: process.env.prData.head.sha,
               state: 'pending',
               context: 'PR Validation / Auto',
               description: 'Validation is in progress...',
             });
+        env:
+          prData: ${{ matrix.pr }}
 
       - name: Prepare Validation
         uses: actions/checkout@v4
