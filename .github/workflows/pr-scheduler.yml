@@ -58,8 +58,7 @@ jobs:
               }
             }
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
-            // core.setOutput("prs", prNumbers);
-            core.setOutput("prs", []);
+            core.setOutput("prs", prNumbers);
             
   job2:
     needs: check_prs
