@@ -13,10 +13,8 @@ permissions:
 jobs:
   check_prs:
     runs-on: ubuntu-latest
-    outputs:
-      prs_to_validate: ${{ steps.set_output_prs.outputs.prs_to_validate }}  # Set job-level output from final step
     steps:
-      - name: List Open Pull Requests
+      - name: List Open PRs
         id: list_prs
         uses: actions/github-script@v6
         with:
@@ -29,7 +27,7 @@ jobs:
             });
             core.exportVariable('PRS', JSON.stringify(pullRequests));
 
-      - name: Filter PRs without Validated or InProgress Status
+      - name: Filter PRs
         id: filter_prs
         uses: actions/github-script@v6
         with:
@@ -39,7 +37,7 @@ jobs:
 
             if (!prsRaw || prsRaw === '[]') {
               console.log("No PRs to validate.");
-              core.exportVariable('VALID_PR_NUMBERS', JSON.stringify([]));
+              core.setOutput("prs_to_validate", JSON.stringify([]));
               return;
             }
             
@@ -58,27 +56,25 @@ jobs:
               }
             }
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
-            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));  # Store in environment variable
+            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
 
-      - name: Set Job Output for PRs to Validate
-        id: set_output_prs
-        run: |
-          echo "Setting prs_to_validate output"
-          echo "::set-output name=prs_to_validate::${VALID_PR_NUMBERS}"  # Set job output directly
-
-      - name: Log Job Output for prs_to_validate
-        run: |
-          echo "prs_to_validate: ${{ steps.set_output_prs.outputs.prs_to_validate }}"  # Log job-level output
-
-  trigger_validation:
+            
+  job2:
     needs: check_prs
-    if: ${{ needs.check_prs.outputs.prs_to_validate != '[]' }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        pr_number: ${{ fromJSON(needs.check_prs.outputs.prs_to_validate) }}
-
     steps:
-      - name: Debug
-        run: |
-          echo "PR Number: ${{ matrix.pr_number }}"
+      - name: Use Variable
+        run: echo "${{ env.VALID_PR_NUMBERS }}"
+
+  # trigger_validation:
+  #   needs: check_prs
+  #   if: ${{ needs.check_prs.outputs.prs_to_validate && fromJSON(needs.check_prs.outputs.prs_to_validate).length > 0 }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       pr_number: ${{ fromJSON(needs.check_prs.outputs.set_output_prs.prs_to_validate) }}
+
+  #   steps:
+  #     - name: Debug
+  #       run: |
+  #         echo "PR Number: ${{ matrix.pr_number }}"
