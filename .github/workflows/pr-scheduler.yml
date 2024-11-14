@@ -2,7 +2,7 @@ name: Check Pull Requests
 
 on:
   schedule:
-    - cron: "* */1 * * *"   # Run every 1 hour
+    - cron: "* */1 * * *"  # Run every 15 minutes
   workflow_dispatch:        # Allow manual triggering
 
 jobs:
@@ -19,15 +19,16 @@ jobs:
               repo: context.repo.repo,
               state: 'open'
             });
-            return pullRequests.map(pr => ({ number: pr.number }));
+            core.setOutput("prs", JSON.stringify(pullRequests.map(pr => pr.number)));
 
       - name: Filter PRs without Validated or InProgress Status
         id: filter_prs
         uses: actions/github-script@v6
         with:
           script: |
+            const prs = JSON.parse(core.getInput("prs"));
             const prNumbers = [];
-            for (const pr of ${JSON.stringify(pullRequests)}) {
+            for (const pr of prs) {
               const { data: statuses } = await github.repos.listCommitStatusesForRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -39,14 +40,17 @@ jobs:
                 prNumbers.push(pr.number);
               }
             }
-            core.setOutput("prs_to_validate", prNumbers.join(','));
+            core.setOutput("prs_to_validate", JSON.stringify(prNumbers));
 
-      - name: Trigger Validation Workflow
-        if: steps.filter_prs.outputs.prs_to_validate != ''
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: "pr-validation.yml"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
-          inputs:
-            pr_number: ${{ each(steps.filter_prs.outputs.prs_to_validate.split(',')) }}
+  trigger_validation:
+    needs: check_prs
+    if: needs.check_prs.outputs.prs_to_validate != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pr_number: ${{ fromJSON(needs.check_prs.outputs.prs_to_validate) }}
+
+    steps:
+      - name: Debug
+        run: |
+          echo "PR Number: ${{ matrix.pr_number }}"
