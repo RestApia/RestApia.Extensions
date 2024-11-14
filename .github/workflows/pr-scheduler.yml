@@ -39,7 +39,7 @@ jobs:
 
             if (!prsRaw || prsRaw === '[]') {
               console.log("No PRs to validate.");
-              core.setOutput("prs_to_validate", JSON.stringify([]));
+              core.setOutput("prs", []);
               return;
             }
             
@@ -59,20 +59,6 @@ jobs:
             }
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
             core.setOutput("prs", prNumbers);
-            
-  job2:
-    needs: check_prs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate PRs
-        run: |
-          echo "1: ${{ needs.check_prs.outputs.prs }}"
-          # echo "2: ${{ needs.check_prs.outputs.prs[0] }}"
-          # echo "3: ${{ needs.check_prs.outputs.prs.length }}"
-          echo "4: ${{ fromJSON(needs.check_prs.outputs.prs) }}"
-          echo "5: ${{ fromJSON(needs.check_prs.outputs.prs)[0] }}"
-          echo "6: ${{ fromJSON(needs.check_prs.outputs.prs).length }}"
-          echo "7: ${{ fromJSON(needs.check_prs.outputs.prs).length > 0 }}"
 
   trigger_validation:
     needs: check_prs
@@ -83,6 +69,41 @@ jobs:
         pr_number: ${{ fromJSON(needs.check_prs.outputs.prs) }}
 
     steps:
-      - name: Debug
+      # - name: Debug
+      #   run: |
+      #     echo "PR Number: ${{ matrix.pr_number }}"
+
+      - name: Prepare Validation
+        uses: actions/checkout@v4
+        with:
+          path: ./
+          repository: RestApia/RestApia.Extensions.Private
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+  
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ matrix.pr_number }}/merge
+          path: .local/pr
+
+      - name: Run Validation
         run: |
-          echo "PR Number: ${{ matrix.pr_number }}"
+          chmod +x ./build.sh
+          ./build.sh Git_PR_Handle --PrNumber ${{ matrix.pr_number }}
+        env:
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package-${{ matrix.pr_number }}  # Unique name per PR
+          path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Post Validation Success
+        if: success()
+        run: echo "Validation passed successfully."
+
+      - name: Post Validation Failure
+        if: failure()
+        run: echo "Validation failed."
+  
