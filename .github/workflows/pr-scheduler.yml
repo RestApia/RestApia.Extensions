@@ -66,13 +66,14 @@ jobs:
     steps:
       - name: Validate PRs
         run: |
-          echo "${{ needs.check_prs.outputs.prs }}"
-          echo "${{ needs.check_prs.outputs.prs[0] }}"
-          echo "${{ needs.check_prs.outputs.prs.length }}"
-          echo "${{ fromJSON(needs.check_prs.outputs.prs) }}"
-          echo "${{ fromJSON(needs.check_prs.outputs.prs).length }}"
+          echo "1: ${{ needs.check_prs.outputs.prs }}"
+          echo "2: ${{ needs.check_prs.outputs.prs[0] }}"
+          echo "3: ${{ needs.check_prs.outputs.prs.length }}"
+          echo "4: ${{ fromJSON(needs.check_prs.outputs.prs) }}"
+          echo "5: ${{ fromJSON(needs.check_prs.outputs.prs)[0] }}"
+          echo "6: ${{ fromJSON(needs.check_prs.outputs.prs).length }}"
           PRS="${{ needs.check_prs.outputs.prs.length }}"
-          echo "Number of PRs: $(echo "$PRS" | jq length)"
+          echo "7: $(echo "$PRS" | jq length)"
 
   trigger_validation:
     needs: check_prs
