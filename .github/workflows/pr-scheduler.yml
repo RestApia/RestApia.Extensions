@@ -58,15 +58,16 @@ jobs:
               }
             }
             console.log(`PRs to validate: ${JSON.stringify(prNumbers)}`);
-            core.exportVariable('VALID_PR_NUMBERS', JSON.stringify(prNumbers));
             core.setOutput("prs", JSON.stringify(prNumbers));
             
-  # job2:
-  #   needs: check_prs
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Use Variable
-  #       run: echo "${{ needs.check_prs.outputs.prs }}"
+  job2:
+    needs: check_prs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PRs
+        run: echo "${{ needs.check_prs.outputs.prs }}"
+      - name: Validate PRs 2- length
+        run: echo "${{ fromJSON(needs.check_prs.outputs.prs).length }}"
 
   trigger_validation:
     needs: check_prs
