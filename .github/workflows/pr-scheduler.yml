@@ -22,6 +22,7 @@ jobs:
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
+              state: 'open'
             });
             core.setOutput("prs", JSON.stringify(pullRequests.map(pr => pr.number)));
             
@@ -35,6 +36,8 @@ jobs:
         with:
           script: |
             const prsRaw = core.getInput("prs");
+            console.log("PRs raw: ", prsRaw);
+            
             if (!prsRaw || prsRaw === '[]') {
               console.log("No PRs to validate.");
               core.setOutput("prs_to_validate", JSON.stringify([]));
