@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   check_prs:
+    name: Check new PRs
     runs-on: ubuntu-latest
     outputs:
       prs: ${{ steps.filter_prs.outputs.prs }}
@@ -96,10 +97,6 @@ jobs:
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # - name: Debug
-      #   run: |
-      #     echo "PR Number: ${{ matrix.pr.number }}"
       
       - name: Set pending Status
         uses: actions/github-script@v6
@@ -164,7 +161,7 @@ jobs:
               target_url: context.payload.repository.html_url + '/actions/runs/' + context.runId + '/job/' + process.env.job_id,
             });
 
-      - name: Post failure Failure
+      - name: Set failure Status
         if: failure()
         uses: actions/github-script@v6
         env:
