@@ -9,6 +9,7 @@ Microsoft.Extensions.DependencyInjection.Abstractions
 Microsoft.Identity.Client
 Microsoft.Identity.Client.Extensions.Msal
 Microsoft.IdentityModel.Abstractions
+Newtonsoft.Json
 RestApia.Shared
 StyleCop.Analyzers
 System.ClientModel
